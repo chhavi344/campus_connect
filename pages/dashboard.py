@@ -97,6 +97,7 @@ with q5:
     key="quick_offer_ride",
     use_container_width=True
 )
+    
 
 with q6:
 
@@ -144,18 +145,19 @@ with c1:
     ):
         st.switch_page("pages/notes_sharing.py")
 
-    st.button(
-    "🚗 Ride Sharing",
-    key="module_ride_sharing",
-    use_container_width=True
-)
+    if st.button(
+        "🚗 Ride Sharing",
+        key="module_ride_sharing",
+        use_container_width=True
+    ):
+        st.switch_page("pages/ride_sharing.py")
 
-    st.button(
+    if st.button(
         "🧪 Equipment Booking",
         key="module_equipment",
         use_container_width=True,
-        
-    )
+    ):
+        st.switch_page("pages/equipment_booking.py")
 
 with c2:
 
@@ -165,17 +167,19 @@ with c2:
     ):
         st.switch_page("pages/book_exchange.py")
 
-    st.button(
-    "💼 Internship Board",
-    key="module_internship",
-    use_container_width=True
-)
+    if st.button(
+        "💼 Internship Board",
+        key="module_internship",
+        use_container_width=True
+    ):
+        st.switch_page("pages/internship_board.py")
 
-    st.button(
+    if st.button(
         "🏠 Hostel Marketplace",
         key="module_hostel_market",
         use_container_width=True
-    )
+    ):
+        st.switch_page("pages/hostel_marketplace.py")
 
     st.button(
         "🔔 Notifications",
@@ -187,30 +191,30 @@ with c3:
 
     if st.button(
         "🎉 Club Events",
-        
         use_container_width=True
     ):
         st.switch_page("pages/club_events.py")
 
-    st.button(
+    if st.button(
         "👨‍🏫 Mentor Connect",
         key="module_mentor",
         use_container_width=True
-    )
+    ):
+        st.switch_page("pages/mentor_matching.py")
 
-    st.button(
+    if st.button(
         "🛠 Complaint Portal",
         key="module_complaint",
         use_container_width=True
-    )
+    ):
+        st.switch_page("pages/complaint_portal.py")
 
-    st.button(
+    if st.button(
         "⚙ Settings",
         key="module_settings",
         use_container_width=True
-    )
-
-st.divider()
+    ):
+        pass
 # QUICK STATS
 
 st.subheader("📊 Campus Statistics")

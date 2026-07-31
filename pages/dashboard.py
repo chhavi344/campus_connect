@@ -1,8 +1,9 @@
+# dashboard.py
 import streamlit as st
 from datetime import datetime
+from database import get_connection
 
-#PAGE SETTINGS
-
+# PAGE SETTINGS
 st.set_page_config(
     page_title="CampusConnect Dashboard",
     page_icon="🎓",
@@ -10,462 +11,428 @@ st.set_page_config(
 )
 
 # LOGIN CHECK
-
 if "logged_in" not in st.session_state:
     st.warning("Please Login First")
     st.switch_page("pages/login.py")
 
-#  HEADER
 
-st.title("🎓 CampusConnect Dashboard")
+# FETCH STATISTICS
 
-name = st.session_state.get("full_name", "Student")
-email = st.session_state.get("email", "")
+def get_stats():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        stats = {}
+        
+        cursor.execute("SELECT COUNT(*) as count FROM lost_items WHERE status != 'Found'")
+        stats['lost_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM books WHERE status='Available'")
+        stats['books_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM notes")
+        stats['notes_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM events WHERE event_date >= CURDATE()")
+        stats['events_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM rides WHERE status='Available'")
+        stats['rides_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM complaints WHERE status='Pending'")
+        stats['complaints_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM marketplace WHERE status='Available'")
+        stats['marketplace_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM internships WHERE last_date >= CURDATE()")
+        stats['internship_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM mentors")
+        stats['mentor_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.execute("SELECT COUNT(*) as count FROM equipment_bookings WHERE status='Pending'")
+        stats['equipment_count'] = cursor.fetchone()['count'] or 0
+        
+        cursor.close()
+        conn.close()
+        
+        return stats
+        
+    except Exception as e:
+        st.error(f"Error fetching data: {e}")
+        return None
 
-st.success(f"👋 Welcome, {name}")
 
-today = datetime.now()
+# YOUR ORIGINAL THEME CSS 
+st.markdown("""
+<style>
+/* Main Container */
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+}
 
-col1, col2, col3 = st.columns(3)
+/* Header */
+.welcome-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 25px 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+.welcome-text {
+    font-size: 24px;
+    font-weight: 600;
+}
+.welcome-subtext {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+.welcome-email {
+    font-size: 13px;
+    opacity: 0.8;
+}
+.welcome-date {
+    text-align: right;
+    font-size: 14px;
+    opacity: 0.9;
+}
 
-with col1:
-    st.info(f"📧 {email}")
+/* Module Cards */
+.module-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px 15px;
+    text-align: center;
+    border: 1px solid #e8ecf1;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    height: 100%;
+}
+.module-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    border-color: #667eea;
+}
+.module-icon {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+.module-name {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 14px;
+    margin: 5px 0;
+}
+.module-desc {
+    font-size: 11px;
+    color: #8e8e8e;
+    margin: 3px 0 10px 0;
+}
 
-with col2:
-    st.info(f"📅 {today.strftime('%d %B %Y')}")
+/* Stat Cards - Your Colors */
+.stat-card {
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    cursor: pointer;
+    border: none;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+.stat-icon {
+    font-size: 20px;
+}
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 2px 0;
+}
+.stat-label {
+    font-size: 10px;
+    opacity: 0.9;
+    font-weight: 500;
+}
 
-with col3:
-    st.info(f"🕒 {today.strftime('%I:%M %p')}")
+/* Stat Colors - Aesthetic */
+.stat-rose { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.stat-sunset { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+.stat-ocean { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.stat-forest { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.stat-lavender { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+.stat-peach { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
+.stat-mint { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #1a1a2e; }
+.stat-coral { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.stat-sky { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); }
+.stat-blush { background: linear-gradient(135deg, #fccb90 0%, #d57eeb 100%); }
 
-st.divider()
+/* Section Title */
+.section-title {
+    color: #1a1a2e;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 20px 0 15px 0;
+}
+.section-title span {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: white;
+    margin-left: 8px;
+}
 
-# SEARCH 
+/* Divider */
+.custom-divider {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #e8ecf1, transparent);
+    margin: 25px 0;
+}
 
-search = st.text_input(
-    "🔍 Search CampusConnect",
-    placeholder="Search books, notes, events, internships, lost items..."
-)
+/* Footer */
+.footer-text {
+    color: #8e8e8e;
+    font-size: 13px;
+    text-align: center;
+    padding: 15px 0;
+}
 
-st.divider()
+/* Button Styles */
+.stButton button {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.stButton button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
-# QUICK ACTIONS 
+/* Info Boxes */
+.stInfo, .stSuccess, .stWarning, .stError {
+    border-radius: 10px !important;
+}
 
-st.subheader("⚡ Quick Actions")
+/* Full width container */
+.block-container {
+    padding-top: 1rem;
+    padding-bottom: 0rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
-q1, q2, q3, q4 = st.columns(4)
 
-with q1:
+# HEADER - Your Style
 
-    if st.button(
-        "📍 Report Lost Item",
-        use_container_width=True
-    ):
-        st.switch_page("pages/lost_found.py")
+st.markdown(f"""
+<div class="welcome-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 28px;">🎓</span>
+                <span style="font-size: 22px; font-weight: 700;">CampusConnect</span>
+            </div>
+            <div class="welcome-text">Welcome back, {st.session_state.get('full_name', 'Student')}! 👋</div>
+            <div class="welcome-email">📧 {st.session_state.get('email', '')}</div>
+        </div>
+        <div class="welcome-date">
+            <div>📅 {datetime.now().strftime('%d %B %Y')}</div>
+            <div>🕒 {datetime.now().strftime('%I:%M %p')}</div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-with q2:
-
-    if st.button(
-        "📚 Upload Notes",
-        use_container_width=True
-    ):
-        st.switch_page("pages/notes_sharing.py")
-
-with q3:
-
-    if st.button(
-        "📖 Sell Book",
-        use_container_width=True
-    ):
-        st.switch_page("pages/book_exchange.py")
-
-with q4:
-
-    if st.button(
-        "🎉 Create Event",
-        use_container_width=True
-    ):
-        st.switch_page("pages/club_events.py")
-
-st.write("")
-
-q5, q6, q7, q8 = st.columns(4)
-
-with q5:
-
-    st.button(
-    "🚗 Offer Ride",
-    key="quick_offer_ride",
-    use_container_width=True
-)
-    
-
-with q6:
-
-  st.button(
-    "🛠 Raise Complaint",
-    key="quick_raise_complaint",
-    use_container_width=True
-)
-
-with q7:
-
-   st.button(
-    "👤 My Profile",
-    key="quick_profile",
-    use_container_width=True
-)
-
-with q8:
-
-   st.button(
-    "🔔 Notifications",
-    key="quick_notifications",
-    use_container_width=True
-)
-
-st.divider()
 
 # CAMPUS MODULES
 
-st.subheader("📦 Campus Modules")
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-
-    if st.button(
-        "📍 Lost & Found",
-        use_container_width=True
-    ):
-        st.switch_page("pages/lost_found.py")
-
-    if st.button(
-        "📝 Notes Sharing",
-        use_container_width=True
-    ):
-        st.switch_page("pages/notes_sharing.py")
-
-    if st.button(
-        "🚗 Ride Sharing",
-        key="module_ride_sharing",
-        use_container_width=True
-    ):
-        st.switch_page("pages/ride_sharing.py")
-
-    if st.button(
-        "🧪 Equipment Booking",
-        key="module_equipment",
-        use_container_width=True,
-    ):
-        st.switch_page("pages/equipment_booking.py")
-
-with c2:
-
-    if st.button(
-        "📚 Book Exchange",
-        use_container_width=True
-    ):
-        st.switch_page("pages/book_exchange.py")
-
-    if st.button(
-        "💼 Internship Board",
-        key="module_internship",
-        use_container_width=True
-    ):
-        st.switch_page("pages/internship_board.py")
-
-    if st.button(
-        "🏠 Hostel Marketplace",
-        key="module_hostel_market",
-        use_container_width=True
-    ):
-        st.switch_page("pages/hostel_marketplace.py")
-
-    st.button(
-        "🔔 Notifications",
-        key="module_notifications",
-        use_container_width=True
-    )
-
-with c3:
-
-    if st.button(
-        "🎉 Club Events",
-        use_container_width=True
-    ):
-        st.switch_page("pages/club_events.py")
-
-    if st.button(
-        "👨‍🏫 Mentor Connect",
-        key="module_mentor",
-        use_container_width=True
-    ):
-        st.switch_page("pages/mentor_matching.py")
-
-    if st.button(
-        "🛠 Complaint Portal",
-        key="module_complaint",
-        use_container_width=True
-    ):
-        st.switch_page("pages/complaint_portal.py")
-
-    if st.button(
-        "⚙ Settings",
-        key="module_settings",
-        use_container_width=True
-    ):
-        pass
-# QUICK STATS
-
-st.subheader("📊 Campus Statistics")
-
-s1, s2, s3, s4 = st.columns(4)
-
-with s1:
-    st.metric(
-        label="📍 Lost Items",
-        value="24"
-    )
-
-with s2:
-    st.metric(
-        label="📚 Books Available",
-        value="18"
-    )
-
-with s3:
-    st.metric(
-        label="📝 Notes Uploaded",
-        value="67"
-    )
-
-with s4:
-    st.metric(
-        label="🎉 Upcoming Events",
-        value="9"
-    )
-
-st.divider()
-
-# RECENT UPDATES 
-
-st.subheader("📢 Recent Updates")
-
-left, right = st.columns(2)
-
-with left:
-
-    st.info("📍 Wallet Found near Central Library")
-
-    st.info("📚 Operating System Notes Uploaded")
-
-    st.info("📖 Data Structures Book Available")
-
-    st.info("🚗 Ride Available to Railway Station")
-
-with right:
-
-    st.info("🎉 Coding Club Registration Open")
-
-    st.info("💼 TCS Internship Applications Started")
-
-    st.info("🛠 Complaint Resolved Successfully")
-
-    st.info("👨‍🏫 New Mentor Added")
-
-st.divider()
-
-# UPCOMING EVENTS 
-
-st.subheader("🎉 Upcoming Events")
-
-e1, e2 = st.columns(2)
-
-with e1:
-
-    st.success("💻 Hackathon 2026")
-    st.write("📅 20 July 2026")
-    st.write("📍 Seminar Hall")
-
-    st.button(
-        "Register",
-        key="hackathon",
-        use_container_width=True
-    )
-
-with e2:
-
-    st.success("🤖 AI Workshop")
-    st.write("📅 25 July 2026")
-    st.write("📍 Lab 4")
-
-    st.button(
-        "Register",
-        key="ai",
-        use_container_width=True
-    )
-
-st.divider()
-
-# FEATURED BOOKS 
-
-st.subheader("📚 Recently Added Books")
-
-b1, b2, b3 = st.columns(3)
-
-with b1:
-
-    st.success("Database Management System")
-
-    st.write("Semester 4")
-
-    st.button(
-        "View",
-        key="book1",
-        use_container_width=True
-    )
-
-with b2:
-
-    st.success("Operating System")
-
-    st.write("Semester 5")
-
-    st.button(
-        "View",
-        key="book2",
-        use_container_width=True
-    )
-
-with b3:
-
-    st.success("Computer Networks")
-
-    st.write("Semester 6")
-
-    st.button(
-        "View",
-        key="book3",
-        use_container_width=True
-    )
-
-st.divider() 
-# MY PROFILE
-
-st.subheader("👤 My Profile")
-
-col1, col2 = st.columns([1,3])
+st.markdown('<div class="section-title">📦 Campus Modules <span>12</span></div>', unsafe_allow_html=True)
+
+modules = [
+    {"name": "Lost & Found", "icon": "📍", "page": "pages/lost_found.py", "desc": "Report lost/found items"},
+    {"name": "Book Exchange", "icon": "📚", "page": "pages/book_exchange.py", "desc": "Exchange books"},
+    {"name": "Club Events", "icon": "🎉", "page": "pages/club_events.py", "desc": "Create/join events"},
+    {"name": "Notes Sharing", "icon": "📝", "page": "pages/notes_sharing.py", "desc": "Share study notes"},
+    {"name": "Internship Board", "icon": "💼", "page": "pages/internship_board.py", "desc": "Find internships"},
+    {"name": "Mentor Connect", "icon": "👨‍🏫", "page": "pages/mentor_matching.py", "desc": "Find mentors"},
+    {"name": "Ride Sharing", "icon": "🚗", "page": "pages/ride_sharing.py", "desc": "Share rides"},
+    {"name": "Hostel Marketplace", "icon": "🏠", "page": "pages/hostel_marketplace.py", "desc": "Buy/sell items"},
+    {"name": "Complaint Portal", "icon": "🛠", "page": "pages/complaint_portal.py", "desc": "Raise complaints"},
+    {"name": "Equipment Booking", "icon": "🧪", "page": "pages/equipment_booking.py", "desc": "Book equipment"},
+    {"name": "Notifications", "icon": "🔔", "page": "pages/notifications.py", "desc": "View notifications"},
+    {"name": "My Profile", "icon": "👤", "page": "pages/profile.py", "desc": "Manage profile"},
+]
+
+# Display modules in 4-column grid
+cols = st.columns(4)
+
+for idx, module in enumerate(modules):
+    col_idx = idx % 4
+    with cols[col_idx]:
+        st.markdown(f"""
+        <div class="module-card">
+            <div class="module-icon">{module['icon']}</div>
+            <div class="module-name">{module['name']}</div>
+            <div class="module-desc">{module['desc']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button(
+            "Open →",
+            key=f"module_{idx}",
+            use_container_width=True
+        ):
+            st.switch_page(module['page'])
+
+st.markdown('<hr class="custom-divider">', unsafe_allow_html=True)
+
+
+# CAMPUS STATISTICS
+
+stats = get_stats()
+
+if stats:
+    st.markdown('<div class="section-title">📊 Campus Statistics <span>Live</span></div>', unsafe_allow_html=True)
+    
+    # Row 1 - 5 columns
+    s1, s2, s3, s4, s5 = st.columns(5)
+    
+    with s1:
+        st.markdown(f"""
+        <div class="stat-card stat-rose">
+            <div class="stat-icon">📍</div>
+            <div class="stat-number">{stats['lost_count']}</div>
+            <div class="stat-label">Lost Items</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("📍", key="stat_lost", use_container_width=True):
+            st.switch_page("pages/lost_found.py")
+    
+    with s2:
+        st.markdown(f"""
+        <div class="stat-card stat-forest">
+            <div class="stat-icon">📚</div>
+            <div class="stat-number">{stats['books_count']}</div>
+            <div class="stat-label">Books</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("📚", key="stat_books", use_container_width=True):
+            st.switch_page("pages/book_exchange.py")
+    
+    with s3:
+        st.markdown(f"""
+        <div class="stat-card stat-ocean">
+            <div class="stat-icon">📝</div>
+            <div class="stat-number">{stats['notes_count']}</div>
+            <div class="stat-label">Notes</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("📝", key="stat_notes", use_container_width=True):
+            st.switch_page("pages/notes_sharing.py")
+    
+    with s4:
+        st.markdown(f"""
+        <div class="stat-card stat-sunset">
+            <div class="stat-icon">🎉</div>
+            <div class="stat-number">{stats['events_count']}</div>
+            <div class="stat-label">Events</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🎉", key="stat_events", use_container_width=True):
+            st.switch_page("pages/club_events.py")
+    
+    with s5:
+        st.markdown(f"""
+        <div class="stat-card stat-lavender">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-number">{stats['rides_count']}</div>
+            <div class="stat-label">Rides</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🚗", key="stat_rides", use_container_width=True):
+            st.switch_page("pages/ride_sharing.py")
+    
+    # Row 2 - 5 columns
+    s6, s7, s8, s9, s10 = st.columns(5)
+    
+    with s6:
+        st.markdown(f"""
+        <div class="stat-card stat-coral">
+            <div class="stat-icon">🛠</div>
+            <div class="stat-number">{stats['complaints_count']}</div>
+            <div class="stat-label">Complaints</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🛠", key="stat_complaints", use_container_width=True):
+            st.switch_page("pages/complaint_portal.py")
+    
+    with s7:
+        st.markdown(f"""
+        <div class="stat-card stat-mint">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-number">{stats['marketplace_count']}</div>
+            <div class="stat-label">Marketplace</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🏠", key="stat_marketplace", use_container_width=True):
+            st.switch_page("pages/hostel_marketplace.py")
+    
+    with s8:
+        st.markdown(f"""
+        <div class="stat-card stat-sky">
+            <div class="stat-icon">💼</div>
+            <div class="stat-number">{stats['internship_count']}</div>
+            <div class="stat-label">Internships</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("💼", key="stat_internships", use_container_width=True):
+            st.switch_page("pages/internship_board.py")
+    
+    with s9:
+        st.markdown(f"""
+        <div class="stat-card stat-blush">
+            <div class="stat-icon">👨‍🏫</div>
+            <div class="stat-number">{stats['mentor_count']}</div>
+            <div class="stat-label">Mentors</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("👨‍🏫", key="stat_mentors", use_container_width=True):
+            st.switch_page("pages/mentor_matching.py")
+    
+    with s10:
+        st.markdown(f"""
+        <div class="stat-card stat-peach">
+            <div class="stat-icon">🧪</div>
+            <div class="stat-number">{stats['equipment_count']}</div>
+            <div class="stat-label">Equipment</div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🧪", key="stat_equipment", use_container_width=True):
+            st.switch_page("pages/equipment_booking.py")
+    
+    st.markdown('<hr class="custom-divider">', unsafe_allow_html=True)
+
+# FOOTER
+
+col1, col2 = st.columns(2)
 
 with col1:
-
-    st.image(
-        "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-        width=120
-    )
+    if st.button("🔄 Refresh Dashboard", use_container_width=True):
+        st.rerun()
 
 with col2:
-
-    st.write(f"**👤 Name :** {st.session_state.get('full_name','Student')}")
-
-    st.write(f"**📧 Email :** {st.session_state.get('email','Not Available')}")
-
-    st.write("**🏫 Department :** CSE")
-
-    st.write("**📚 Semester :** Semester 6")
-
-st.divider()
-
-# MY ACTIVITY 
-
-st.subheader("📋 My Activity")
-
-a1, a2, a3 = st.columns(3)
-
-with a1:
-
-    st.success("📍 Lost Items")
-    st.metric(
-        "Reports",
-        "2"
-    )
-
-with a2:
-
-    st.success("📚 Notes Uploaded")
-    st.metric(
-        "Uploads",
-        "5"
-    )
-
-with a3:
-
-    st.success("📖 Books Listed")
-    st.metric(
-        "Books",
-        "3"
-    )
-
-st.divider()
-
-# ANNOUNCEMENTS 
-
-st.subheader("📢 Announcements")
-
-st.warning("📅 Semester Examination Form is Live.")
-
-st.warning("🎉 Independence Day Celebration Registration Open.")
-
-st.warning("💼 New Internship Opportunities Available.")
-
-st.divider()
-
-# HELP 
-
-with st.expander("ℹ Need Help?"):
-
-    st.markdown("""
-### CampusConnect Guide
-
-- 📍 Report Lost & Found Items
-- 📚 Exchange Books
-- 📝 Share Notes
-- 🎉 Join Club Events
-- 🚗 Share Rides
-- 💼 Apply for Internships
-- 👨‍🏫 Connect with Mentors
-- 🛠 Raise Complaints
-
-Your data is securely stored in the CampusConnect database.
-""")
-
-st.divider()
-
-# footer
-
-left, right = st.columns(2)
-
-#with left:
-
- #   if st.button(
-  #      "🏠 Home",
-   #     use_container_width=True
-   # ):
-
-    #    st.rerun()
-
-with right:
-
-    if st.button(
-        "🚪 Logout",
-        use_container_width=True
-    ):
-
+    if st.button("🚪 Logout", use_container_width=True):
         st.session_state.clear()
-
-        st.success("Logged Out Successfully")
-
         st.switch_page("app.py")
 
-st.divider()
-
-st.caption("🎓 CampusConnect | Smart Campus Management System")
+st.markdown('<div class="footer-text">🎓 CampusConnect | Smart Campus Management System</div>', unsafe_allow_html=True)

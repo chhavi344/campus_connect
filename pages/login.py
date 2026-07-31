@@ -78,6 +78,10 @@ if login:
                     st.session_state.user_id = user["user_id"]
                     st.session_state.full_name = user["full_name"]
                     st.session_state.email = user["email"]
+                    st.session_state.phone = user["phone"]
+                    st.session_state.department = user["department"]
+                    st.session_state.semester = user["semester"]
+                    st.session_state.profile_image = user["profile_image"]
 
                     st.success("✅ Login Successful")
 

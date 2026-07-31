@@ -1,4 +1,5 @@
 import streamlit as st
+from email_service import send_email
 import bcrypt
 from database import get_connection
 
@@ -155,18 +156,44 @@ if submit:
                             semester
                         )
                     )
-
                     conn.commit()
+
+                    # Send Welcome Email
+                    send_email(
+                        email,
+                        "🎉 Welcome to CampusConnect",
+                        f"""
+Hello {full_name},
+
+Welcome to CampusConnect!
+
+Your account has been created successfully.
+
+You can now use:
+
+🚗 Ride Sharing
+📚 Notes Sharing
+🧪 Equipment Booking
+🏠 Hostel Marketplace
+🎉 Club Events
+
+We hope you enjoy using CampusConnect.
+
+Regards,
+CampusConnect Team
+"""
+                    )
 
                     st.success("🎉 Account Created Successfully!")
 
+                                      
                     st.balloons()
 
                     st.switch_page("pages/login.py")
 
         except Exception as e:
 
-            st.error(f"Database Error : {e}")
+            st.error(f"Database Error: {e}")
 
         finally:
 
@@ -175,19 +202,3 @@ if submit:
 
             if "conn" in locals():
                 conn.close()
-
-st.divider()
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    if st.button("⬅ Back", use_container_width=True):
-
-        st.switch_page("app.py")
-
-with col2:
-
-    if st.button("🔐 Login", use_container_width=True):
-
-        st.switch_page("pages/login.py")

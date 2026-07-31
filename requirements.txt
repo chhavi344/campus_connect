@@ -1,5 +1,8 @@
 streamlit
 mysql-connector-python
+bcrypt
+folium
+geopy
+streamlit-folium
 Pillow
 requests
-python-dotenv
